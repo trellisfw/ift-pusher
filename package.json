@@ -1,0 +1,27 @@
+{
+  "name": "ift-pusher",
+  "version": "0.1.0",
+  "description": "A tool to move documents from Trellis to IBM FoodTrust",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.mjs",
+    "debug": "NODE_TLS_REJECT_UNAUTHORIZED=0 DEBUG=* node index.mjs"
+  },
+  "author": "Andrew Balmos <abalmos@qlever.io>",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "prettier": "1.19.1"
+  },
+  "dependencies": {
+    "@oada/oada-jobs": "oada/oada-jobs",
+    "bluebird": "^3.7.2",
+    "debug": "^4.1.1",
+    "form-data": "^3.0.0",
+    "moment": "^2.24.0",
+    "nconf": "^0.10.0",
+    "node-fetch": "^2.6.0"
+  }
+}

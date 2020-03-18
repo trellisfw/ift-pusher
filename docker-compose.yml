@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  ##########################################
+  # Overrides for oada-core services:
+  ##########################################
+
+  # Add ourselves to yarn to do yarn install
+  yarn:
+    volumes:
+      - ./services-available/ift-pusher:/code/ift-pusher
+
+  # Add ourselves to admin container:
+  admin:
+    volumes:
+      - ./services-available/ift-pusher:/code/ift-pusher
+
+
+  ###############################################
+  # This service's definition:
+  ###############################################
+  ift-pusher:
+    depends_on:
+      - startup
+    build:
+      context: ./services-available/ift-pusher
+    container_name: ift-pusher
+    restart: always
+    networks:
+      - http_net
+      - startup_net
+      - arango_net
+    volumes:
+      - ./services-available/ift-pusher:/code/ift-pusher
+      - ./oada-core/libs:/code/libs
+      - ./oada-srvc-docker-config.js:/oada-srvc-docker-config.js
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED
+      - NODE_ENV=${NODE_ENV:-development}
+      - DEBUG
