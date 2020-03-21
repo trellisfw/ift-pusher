@@ -179,19 +179,31 @@ async function createIFTAudit(access_token, audit, pdf) {
       ).format("YYYY-MM-DD"),
       customProperties: [
         {
-          name: "certification id",
+          name: "(( c )) Scheme",
+          value: scheme
+        },
+        {
+          name: "(( c )) Score",
+          value: `${audit.score.final.value} ${audit.score.final.units}`
+        },
+        {
+          name: "(( c )) Rating",
+          value: audit.score.rating
+        },
+        {
+          name: "(( c )) Certification id",
           value: audit.certificationid.id
         },
         {
-          name: "audit id",
+          name: "(( c )) Audit id",
           value: audit.auditid.id
         },
         {
-          name: "organization",
+          name: "(( c )) Organization",
           value: audit.organization.name
         },
         {
-          name: "organization location",
+          name: "(( c )) Organization location",
           value: `${audit.organization.location.street_address},
         ${audit.organization.location.city},
         ${audit.organization.location.state},
@@ -199,35 +211,23 @@ async function createIFTAudit(access_token, audit, pdf) {
         ${audit.organization.location.country}`
         },
         {
-          name: "products",
+          name: "(( c )) Products",
           value: audit.scope.products_observed.map(p => p.name).join(", ")
         },
         {
-          name: "audit date",
+          name: "(( c )) Audit date",
           value: moment(
             audit.conditions_during_audit.operation_observed_date.start
           ).format("YYYY-MM-DD"),
           format: "date"
         },
         {
-          name: "scheme",
-          value: scheme
-        },
-        {
-          name: "certification body",
+          name: "(( c )) Certification body",
           value: audit.certifying_body.name
         },
         {
-          name: "auditors",
+          name: "(( c )) Auditors",
           value: auditors
-        },
-        {
-          name: "score",
-          value: `${audit.score.final.value} ${audit.score.final.units}`
-        },
-        {
-          name: "raiting",
-          value: audit.score.rating
         }
       ]
     })
@@ -255,15 +255,15 @@ async function createIFTCoi(access_token, coi, pdf) {
 
   let customProperties = [
     {
-      name: "certificate number",
+      name: "(( c )) Certificate number",
       value: coi.certificate.certnum
     },
     {
-      name: "producer",
+      name: "(( c )) Producer",
       value: coi.producer.name
     },
     {
-      name: "producer location",
+      name: "(( c )) Producer location",
       value: `${coi.producer.location.street_address},
                   ${coi.producer.location.city},
                   ${coi.producer.location.state},
@@ -271,11 +271,11 @@ async function createIFTCoi(access_token, coi, pdf) {
                   ${coi.producer.location.country}`
     },
     {
-      name: "insured",
+      name: "(( c )) Insured",
       value: coi.insured.name
     },
     {
-      name: "insured location",
+      name: "(( c )) Insured location",
       value: `${coi.insured.location.street_address},
                   ${coi.insured.location.city},
                   ${coi.insured.location.state},
@@ -283,11 +283,11 @@ async function createIFTCoi(access_token, coi, pdf) {
                   ${coi.insured.location.country}`
     },
     {
-      name: "holder",
+      name: "(( c )) Holder",
       value: coi.holder.name
     },
     {
-      name: "holder location",
+      name: "(( c )) Holder location",
       value: `${coi.holder.location.street_address},
                   ${coi.holder.location.city},
                   ${coi.holder.location.state},
@@ -300,16 +300,16 @@ async function createIFTCoi(access_token, coi, pdf) {
     const p = coi.policies[number];
 
     customProperties.push({
-      name: `policy_${i}_number`,
+      name: `(( c )) Policy ${i + 1} number`,
       value: p.number
     });
     customProperties.push({
-      name: `policy_${i}_effective`,
+      name: `(( c )) Policy ${i + 1} effective`,
       value: moment(p.effective_date).format("YYYY-MM-DD"),
       format: "date"
     });
     customProperties.push({
-      name: `policy_${i}_expire`,
+      name: `(( c )) Policy ${i + 1} expire`,
       value: moment(p.expire_date).format("YYYY-MM-DD"),
       format: "date"
     });
