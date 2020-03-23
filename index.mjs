@@ -4,6 +4,7 @@ import { JobQueue } from "@oada/oada-jobs";
 import Promise from "bluebird";
 import moment from "moment";
 import FormData from "form-data";
+import { VDoc } from "./lib.mjs";
 
 import config from "./config.js";
 
@@ -86,9 +87,10 @@ async function iftSync(resource_id, task, conn) {
     task.audits = {};
     await Promise.map(Object.keys(vDoc.audits), async auditId => {
       debug("Audit:", auditId);
-      const audit = await conn
+      const audit = conn
         .get({ path: `/resources/${resource_id}/audits/${auditId}` })
-        .then(r => r.data);
+        .then(r => r.data)
+        .then(doc => new VDoc(doc));
 
       debug("Creating IFT audit");
       const iftId = await createIFTAudit(access_token, audit, pdf);
@@ -102,9 +104,10 @@ async function iftSync(resource_id, task, conn) {
     task.cois = {};
     await Promise.map(Object.keys(vDoc.cois), async coiId => {
       debug("Coi:", coiId);
-      const coi = await conn
+      const coi = conn
         .get({ path: `/resources/${resource_id}/cois/${coiId}` })
-        .then(r => r.data);
+        .then(r => r.data)
+        .then(doc => new VDoc(doc));
 
       debug("Creating IFT coi");
       const iftId = await createIFTCoi(access_token, coi, pdf);
@@ -144,19 +147,9 @@ async function getPDF(vDoc, conn) {
 }
 
 async function createIFTAudit(access_token, audit, pdf) {
-  const auditors = audit.certifying_body.auditors
+  const auditors = audit.vDoc.certifying_body.auditors
     .map(a => `${a.FName} ${a.LName}`)
     .join(", ");
-
-  // TODO: Who is going to clean all this up?
-  let scheme = "";
-  if (audit.scheme.name === "SQFI") {
-    if (audit.scheme.edition === "8.0") {
-      scheme = "SQF - SQF Code 8th Edition";
-    } else if (audit.scheme.edition === "7.0") {
-      scheme = "SQF - SQF Code 7th Edition";
-    }
-  }
 
   const formData = new FormData();
   formData.append("content", pdf.data, {
@@ -168,62 +161,64 @@ async function createIFTAudit(access_token, audit, pdf) {
     "properties",
     JSON.stringify({
       documentType: "SQF",
-      documentTitle: `${audit.scheme.name} Audit - ${audit.organization.name}`,
+      documentTitle: `${audit.getFieldValue(
+        "/scheme/name"
+      )} Audit - ${audit.getFieldValue("/organization/name")}`,
       expiryDate: moment(
-        audit.certificate_validity_period.end,
+        audit.getFieldValue("/certificate_validity_period/end"),
         "MM/DD/YYYY"
       ).format("YYYY-MM-DD"),
       issueDate: moment(
-        audit.certificate_validity_period.start,
+        audit.getFieldValue("/certificate_validity_period/start"),
         "MM/DD/YYYY"
       ).format("YYYY-MM-DD"),
       customProperties: [
         {
           name: "(( c )) Scheme",
-          value: scheme
+          value: audit.getDisplayScheme()
         },
         {
           name: "(( c )) Score",
-          value: `${audit.score.final.value} ${audit.score.final.units}`
+          value: `${audit.getFieldValue(
+            "/score/final/value"
+          )} ${audit.getFieldValue("/score/final/units")}`
         },
         {
           name: "(( c )) Rating",
-          value: audit.score.rating
+          value: audit.getFieldValue("/score/rating")
         },
         {
           name: "(( c )) Certification id",
-          value: audit.certificationid.id
+          value: audit.getFieldValue("/certificationid/id")
         },
         {
           name: "(( c )) Audit id",
-          value: audit.auditid.id
+          value: audit.getFieldValue("/auditid/id")
         },
         {
           name: "(( c )) Organization",
-          value: audit.organization.name
+          value: audit.getFieldValue("/organization/name")
         },
         {
           name: "(( c )) Organization location",
-          value: `${audit.organization.location.street_address},
-        ${audit.organization.location.city},
-        ${audit.organization.location.state},
-        ${audit.organization.location.postal_code},
-        ${audit.organization.location.country}`
+          value: audit.getDisplayLocation("/organization/location")
         },
         {
           name: "(( c )) Products",
-          value: audit.scope.products_observed.map(p => p.name).join(", ")
+          value: audit.vDoc.scope.products_observed.map(p => p.name).join(", ")
         },
         {
           name: "(( c )) Audit date",
           value: moment(
-            audit.conditions_during_audit.operation_observed_date.start
+            audit.getFieldValue(
+              "/conditions_during_audit/operation_observed_date/start"
+            )
           ).format("YYYY-MM-DD"),
           format: "date"
         },
         {
           name: "(( c )) Certification body",
-          value: audit.certifying_body.name
+          value: audit.getFieldValue("/certifying_body/name")
         },
         {
           name: "(( c )) Auditors",
@@ -256,48 +251,36 @@ async function createIFTCoi(access_token, coi, pdf) {
   let customProperties = [
     {
       name: "(( c )) Certificate number",
-      value: coi.certificate.certnum
+      value: coi.getFieldValue("/certificate/certnum")
     },
     {
       name: "(( c )) Producer",
-      value: coi.producer.name
+      value: coi.getFieldValue("/producer/name")
     },
     {
       name: "(( c )) Producer location",
-      value: `${coi.producer.location.street_address},
-                  ${coi.producer.location.city},
-                  ${coi.producer.location.state},
-                  ${coi.producer.location.postal_code},
-                  ${coi.producer.location.country}`
+      value: coi.getDisplayLocation("/producer/location")
     },
     {
       name: "(( c )) Insured",
-      value: coi.insured.name
+      value: coi.getFieldValue("/insured/name")
     },
     {
       name: "(( c )) Insured location",
-      value: `${coi.insured.location.street_address},
-                  ${coi.insured.location.city},
-                  ${coi.insured.location.state},
-                  ${coi.insured.location.postal_code},
-                  ${coi.insured.location.country}`
+      value: coi.getDisplayLocation("/insured/location")
     },
     {
       name: "(( c )) Holder",
-      value: coi.holder.name
+      value: coi.getFieldValue("/holder/name")
     },
     {
       name: "(( c )) Holder location",
-      value: `${coi.holder.location.street_address},
-                  ${coi.holder.location.city},
-                  ${coi.holder.location.state},
-                  ${coi.holder.location.postal_code},
-                  ${coi.holder.location.country}`
+      value: coi.getDisplayLocation("/holder/location")
     }
   ];
 
-  Object.keys(coi.policies).forEach((number, i) => {
-    const p = coi.policies[number];
+  Object.keys(coi.vDoc.policies).forEach((number, i) => {
+    const p = coi.vDoc.policies[number];
 
     customProperties.push({
       name: `(( c )) Policy ${i + 1} number`,
@@ -326,7 +309,9 @@ async function createIFTCoi(access_token, coi, pdf) {
     JSON.stringify({
       documentType: "Generic Document",
       documentTitle: `Certificate of Insurance - ${coi.holder.name.trim()}`,
-      issueDate: moment(coi.certificate.docdate).format("YYYY-MM-DD"),
+      issueDate: moment(coi.getFieldValue("/certificate/docdate")).format(
+        "YYYY-MM-DD"
+      ),
       customProperties
     })
   );
