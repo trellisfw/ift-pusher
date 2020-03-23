@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@oada/oada-jobs": "oada/oada-jobs",
+    "@trellisfw/masklink": "trellisfw/trellisfw-masklink",
     "bluebird": "^3.7.2",
     "debug": "^4.1.1",
     "form-data": "^3.0.0",
