@@ -314,7 +314,9 @@ async function createIFTCoi(access_token, coi, pdf) {
     "properties",
     JSON.stringify({
       documentType: "Generic Document",
-      documentTitle: `Certificate of Insurance - ${coi.holder.name.trim()}`,
+      documentTitle: `Certificate of Insurance - ${coi
+        .getFieldValue("/holder/name")
+        .trim()}`,
       issueDate: moment(coi.getFieldValue("/certificate/docdate")).format(
         "YYYY-MM-DD"
       ),
