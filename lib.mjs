@@ -1,25 +1,8 @@
+import {escape} from "querystring";
 import config from "./config.js";
 import ml from "@trellisfw/masklink";
 
-// const TRELLIS_URL = "localhost";
 const TRELLIS_URL = config.get("trellis_url");
-
-import TEST_AUDIT from "./auditMasked.js";
-
-// const test = {
-//   one1: {
-//     "trellis-mask": {
-//       one2: "one"
-//     }
-//   },
-//   two1: {
-//     two2: {
-//       "trellis-mask": {
-//         two3: "two3"
-//       }
-//     }
-//   }
-// };
 
 export class VDoc {
   vDoc;
@@ -65,7 +48,7 @@ export class VDoc {
    * processed manually
    */
   getFieldValue(path) {
-    const { plo, res } = this.access(path);
+    const {plo, res} = this.access(path);
     if (plo === "") {
       return res;
     }
@@ -73,7 +56,7 @@ export class VDoc {
   }
 
   getDisplayLocation(path) {
-    const { res } = this.access(path);
+    const {res} = this.access(path);
     if (ml.isMask(res)) {
       return getVerificationQuery(res);
     }
@@ -85,7 +68,7 @@ export class VDoc {
   }
 
   getDisplayScheme() {
-    const { res } = this.access("/scheme");
+    const {res} = this.access("/scheme");
     // not sure why this would ever happen...
     if (ml.isMask(res)) {
       return getVerificationQuery(res);
@@ -105,27 +88,7 @@ function getVerificationQuery(mask) {
   if (!mask) {
     return "";
   }
-  if (mask["trellis-mask"]) {
-    mask = mask["trellis-mask"];
-  }
-  return `${TRELLIS_URL}/verify?${Object.keys(mask)
-    .filter(key => typeof mask[key] !== "object")
-    .map(key => {
-      return `${encodeURIComponent(key)}=${mask[key]}`;
-    })
-    .join("&")}&${encodeURIComponent("hashinfo.alg")}=${
-    mask["hashinfo"]["alg"]
-  }&${encodeURIComponent("hashinfo.hash")}=${mask["hashinfo"]["hash"]}`;
+  return `https://trellisfw.github.io/reagan?trellis-mask=${escape(
+    JSON.stringify(mask["trellis-mask"])
+  )}`;
 }
-
-(() => {
-  const v1 = new VDoc(TEST_AUDIT);
-  if (v1.masks) {
-    v1.masks.forEach(mask => {
-      console.log(mask);
-      console.log(v1.getDisplayLocation(mask));
-      // console.log(getVerificationQuery(mask));
-    });
-  }
-  // console.log(v1.access("one1/three/four1"));
-})();

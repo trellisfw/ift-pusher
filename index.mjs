@@ -87,7 +87,7 @@ async function iftSync(resource_id, task, conn) {
     task.audits = {};
     await Promise.map(Object.keys(vDoc.audits), async auditId => {
       debug("Audit:", auditId);
-      const audit = conn
+      const audit = await conn
         .get({ path: `/resources/${resource_id}/audits/${auditId}` })
         .then(r => r.data)
         .then(doc => new VDoc(doc));
@@ -104,7 +104,7 @@ async function iftSync(resource_id, task, conn) {
     task.cois = {};
     await Promise.map(Object.keys(vDoc.cois), async coiId => {
       debug("Coi:", coiId);
-      const coi = conn
+      const coi = await conn
         .get({ path: `/resources/${resource_id}/cois/${coiId}` })
         .then(r => r.data)
         .then(doc => new VDoc(doc));
@@ -147,7 +147,9 @@ async function getPDF(vDoc, conn) {
 }
 
 async function createIFTAudit(access_token, audit, pdf) {
-  const auditors = audit.vDoc.certifying_body.auditors
+  console.log(audit);
+  const auditors = audit
+    .getFieldValue("/certifying_body/auditors")
     .map(a => `${a.FName} ${a.LName}`)
     .join(", ");
 
@@ -205,7 +207,10 @@ async function createIFTAudit(access_token, audit, pdf) {
         },
         {
           name: "(( c )) Products",
-          value: audit.vDoc.scope.products_observed.map(p => p.name).join(", ")
+          value: audit
+            .getFieldValue("/scope/products_observed")
+            .map(p => p.name)
+            .join(", ")
         },
         {
           name: "(( c )) Audit date",
@@ -279,8 +284,9 @@ async function createIFTCoi(access_token, coi, pdf) {
     }
   ];
 
-  Object.keys(coi.vDoc.policies).forEach((number, i) => {
-    const p = coi.vDoc.policies[number];
+  const policies = coi.getFieldValue("/policies");
+  Object.keys(policies).forEach((number, i) => {
+    const p = policies[number];
 
     customProperties.push({
       name: `(( c )) Policy ${i + 1} number`,
