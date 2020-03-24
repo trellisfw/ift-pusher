@@ -1,8 +1,5 @@
-import {escape} from "querystring";
-import config from "./config.js";
+import { escape } from "querystring";
 import ml from "@trellisfw/masklink";
-
-const TRELLIS_URL = config.get("trellis_url");
 
 export class VDoc {
   vDoc;
@@ -48,7 +45,7 @@ export class VDoc {
    * processed manually
    */
   getFieldValue(path) {
-    const {plo, res} = this.access(path);
+    const { plo, res } = this.access(path);
     if (plo === "") {
       return res;
     }
@@ -56,7 +53,7 @@ export class VDoc {
   }
 
   getDisplayLocation(path) {
-    const {res} = this.access(path);
+    const { res } = this.access(path);
     if (ml.isMask(res)) {
       return getVerificationQuery(res);
     }
@@ -68,7 +65,7 @@ export class VDoc {
   }
 
   getDisplayScheme() {
-    const {res} = this.access("/scheme");
+    const { res } = this.access("/scheme");
     // not sure why this would ever happen...
     if (ml.isMask(res)) {
       return getVerificationQuery(res);
