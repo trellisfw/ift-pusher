@@ -2,25 +2,43 @@
   "name": "ift-pusher",
   "version": "0.1.0",
   "description": "A tool to move documents from Trellis to IBM FoodTrust",
-  "main": "index.mjs",
-  "type": "module",
+  "source": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/types.d.js",
+  "files": [
+    "dist/**/*"
+  ],
+  "bin": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.mjs",
+    "build": "tsc && cp src/lib-config.cjs dest",
+    "start": "ts-node src/index.ts",
+    "prod": "tsc && node dist/index.js",
     "debug": "NODE_TLS_REJECT_UNAUTHORIZED=0 DEBUG=* node index.mjs"
   },
   "author": "Andrew Balmos <abalmos@qlever.io>",
   "license": "MIT",
   "devDependencies": {
+    "@types/bluebird": "^3.5.32",
+    "@types/debug": "^4.1.5",
+    "@types/moment": "^2.13.0",
+    "@types/node": "^14.0.14",
+    "@types/node-fetch": "^2.5.7",
     "eslint": "^6.8.0",
-    "prettier": "1.19.1"
+    "prettier": "1.19.1",
+    "ts-node": "^8.10.2",
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.5"
   },
   "dependencies": {
-    "@oada/oada-jobs": "oada/oada-jobs",
+    "@oada/client": "^1.0.2",
+    "@oada/formats": "^1.1.2",
+    "@oada/jobs": "^2.0.1",
+    "@oada/types": "^1.0.10",
     "@trellisfw/masklink": "trellisfw/trellisfw-masklink",
     "bluebird": "^3.7.2",
     "debug": "^4.1.1",
     "form-data": "^3.0.0",
+    "jsonschema8": "^1.1.0",
     "moment": "^2.24.0",
     "nconf": "^0.10.0",
     "node-fetch": "^2.6.0"

@@ -1,6 +1,7 @@
-//@ts-ignore
+// @ts-ignore
 import libConfig from './lib-config.cjs';
-import config from './config.defaults.js';
+// @ts-ignore
+import config from './config.defaults';
 
 export default libConfig(config);
 
